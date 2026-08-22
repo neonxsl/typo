@@ -22,8 +22,35 @@ let gear = allMods.find(m => m.label === savedModeLabel) || timeModes[0];
 let pool = [];
 let tape = new TapeDeck([], gear), ticker = null;
 let view = new StageFramer();
-const reboot = async (selectedGear = gear) => {
 
+let timeline = [];
+let lastRecordedErrors = 0;
+
+const getSampleInterval = () => {
+  if (gear.target <= 15) return 500;
+  return 1000;
+};
+
+const recordSnapshot = () => {
+  if (!tape.beganAt || tape.sealed) return;
+  const elapsed = (performance.now() - tape.beganAt) / 1000;
+  if (elapsed <0.2) return;
+
+  const stats = tape.spill();
+  const newErrors = tape.slips - lastRecordedErrors;
+  lastRecordedErrors = tape.slips;
+
+  timeline.push({
+    second: Math.round(elapsed*10)/10,
+    wpm: stats.wpm,
+    raw: stats.raw,
+    errors: newErrors > 0 ? newErrors : 0
+  });
+}
+
+const reboot = async (selectedGear = gear) => {
+  timeline = [];
+  lastRecordedErrors = 0;
   gear = selectedGear;
   localStorage.setItem("typo-mode", gear.label);
 
@@ -43,15 +70,17 @@ const reboot = async (selectedGear = gear) => {
   requestAnimationFrame(() => view.snapCaret(0, 0));
 };
 
-
 const halt = () => {
+
   tape.nuke();
   if (ticker) clearInterval(ticker);
   ticker = null;
 
+  recordSnapshot();
+
   const stats = tape.spill();
   const pbinfo = updatePB(gear.label, stats.wpm);
-  view.showTrophy(stats, pbinfo);
+  view.showTrophy(stats, pbinfo, timeline);
 
   if (pbinfo.isNew && stats.wpm > 0) {
     confetti({
@@ -63,12 +92,16 @@ const halt = () => {
   }
 };
 
-
-
 const pulse = () => {
+  const sampleRate = getSampleInterval();
+
+
   ticker = setInterval(() => {
     if (!tape.beganAt || tape.sealed) return;
     const passed = Math.floor((performance.now() - tape.beganAt) / 1000);
+
+    recordSnapshot();
+  
     if (gear.kind === "time") {
       const rem = Math.max(0, gear.target - passed);
       view.tickClock(rem);
@@ -76,7 +109,7 @@ const pulse = () => {
     } else {
       view.tickClock(`${Math.max(0, tape.words.length - tape.wi)}w`);
     }
-  }, 250);
+  }, sampleRate);
 };
 
 const ingest = (key) => {
@@ -101,7 +134,6 @@ const ingest = (key) => {
 
 
 };
-
 
 const bumpWord = () => {
   const typed = tape.history[tape.wi] || "";

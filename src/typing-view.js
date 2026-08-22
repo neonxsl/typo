@@ -11,7 +11,89 @@ export class StageFramer {
     this.resRaw = document.getElementById("res-raw");
     this.resChars = document.getElementById("res-chars");
     this.resPb = document.getElementById("res-pb");
+    this.chartCanvas = document.getElementById("speed-chart");
+    this.chartInstance = null;
+
   }
+
+  renderChart(timeline) {
+    if (!this.chartCanvas || !timeline || !timeline.length) return;
+
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+
+    Chart.defaults.font.family = "'Space Grotesk', sans-serif";
+
+    const labels = timeline.map((pt) => `${pt.second}s`);
+    const wpmData = timeline.map((pt) => pt.wpm);
+    const rawData = timeline.map((pt) => pt.raw);
+
+    const errorPoints = timeline.map((pt) => (pt.errors > 0 ? 1 : null));
+
+    // if you find this, have a great day!
+
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    const lineCol = isLight ? "#111" : "#fff";
+    const rawCol = isLight ? "#888" : "#333";
+    const gridCol = isLight ? "#eee" : "#444";
+
+    
+
+    this.chartInstance = new Chart(this.chartCanvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'errors',
+            data: errorPoints,
+            pointBackgroundColor: '#ef4444',
+            pointBorderColor: '#ef4444',
+            pointRadius: 5,
+            pointStyle: 'crossRot',
+            order: 0,
+          },
+          {
+            label: 'wpm',
+            data: wpmData,
+            borderColor: lineCol,
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+          },
+          {
+            label: 'raw',
+            data: rawData,
+            borderColor: rawCol,
+            borderWidth: 1.5,
+            borderDash: [5, 5],
+            tension: 0.4,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {display: false},
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+          }
+        }
+      }
+    });
+  }
+
   feedWords(words) {
     words.forEach((w) => {
       const wNode = document.createElement("div");
@@ -23,6 +105,7 @@ export class StageFramer {
         wNode.appendChild(ch);
       }
       this.streamEl.appendChild(wNode);
+
 
     });
   }
@@ -92,7 +175,7 @@ export class StageFramer {
   setModeTag(txt) {
     this.modeEl.textContent = txt;
   }
-  showTrophy(stats, pbInfo) {
+  showTrophy(stats, pbInfo, timeline = []) {
     this.resWpm.textContent = stats.wpm;
     this.resAcc.textContent = stats.acc;
     this.resRaw.textContent = stats.raw;
@@ -104,6 +187,8 @@ export class StageFramer {
       this.resPb.classList.toggle("new-pb", pbInfo.isNew);
     // ayyy you got a new pb
     }
+
+    this.renderChart(timeline);
 
     this.resultsEl.classList.remove("hide");
     this.clockEl.classList.add("hide");
@@ -118,8 +203,15 @@ export class StageFramer {
 
 
   }
+  
   douse() {
     this.caretEl.style.left = "0px";
     this.caretEl.style.top = "0px";
   }
 }
+
+
+
+
+
+// toodles

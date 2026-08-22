@@ -128,3 +128,9 @@ body {
 .hide {
   display: none !important;
 }
+
+.chart-box {
+  grid-column: 1 / -1;
+  height: 200px;
+  margin-top: 1rem;
+}
