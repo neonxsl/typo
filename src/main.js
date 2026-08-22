@@ -78,6 +78,7 @@ const pulse = () => {
     }
   }, 250);
 };
+
 const ingest = (key) => {
   tape.stamp();
   if (!ticker) pulse();
@@ -100,6 +101,8 @@ const ingest = (key) => {
 
 
 };
+
+
 const bumpWord = () => {
   const typed = tape.history[tape.wi] || "";
   if (!typed.length && tape.ci === 0) return;
@@ -107,13 +110,22 @@ const bumpWord = () => {
 
   if (!ticker) pulse();
 
-
   const target = tape.words[tape.wi] || "";
-  if (typed.length < target.length) tape.slips += target.length - typed.length;
+
+  if (typed.length < target.length) {
+    tape.slips += target.length - typed.length;
+    for (let i = tape.ci; i < target.length; i++) {
+      view.paintChar(tape.wi, i, "wrong");
+    }
+  }
+
   tape.wi++;
   tape.ci = 0;
+
   if (gear.kind === "time" && tape.wi > tape.words.length - 20) {
-    const fresh = harvest(pool, 25); tape.words.push(...fresh); view.feedWords(fresh);
+    const fresh = harvest(pool, 25);
+    tape.words.push(...fresh);
+    view.feedWords(fresh);
   }
 
   if (gear.kind === "words" && tape.wi >= tape.words.length) return halt();
@@ -138,9 +150,21 @@ export const updatePB = (modeLabel, wpm) => {
 
 const peel = () => {
   if (tape.ci === 0) {
-    if (tape.wi > 0) { tape.wi--; tape.ci = (tape.history[tape.wi] || "").length; view.snapCaret(tape.wi, tape.ci); }
-    return;
+    if (tape.wi > 0) {
+      tape.wi--;
+      const target = tape.words[tape.wi] || "";
+      const typed = tape.history[tape.wi] || "";
+      if (typed.length < target.length) {
+        tape.slips -= target.length - typed.length; 
+        for (let i = typed.length; i < target.length; i++) {
+          view.paintChar(tape.wi, i, "");
+        }
+      }
 
+      tape.ci = typed.length;
+      view.snapCaret(tape.wi, tape.ci);
+    }
+    return;
   }
   const target = tape.words[tape.wi] || "";
   tape.ci--;
@@ -150,6 +174,7 @@ const peel = () => {
   else view.paintChar(tape.wi, tape.ci, "");
   view.snapCaret(tape.wi, tape.ci);
 };
+
 window.addEventListener("keydown", (e) => {
 
   if (e.key === "Tab") { e.preventDefault(); return; }
@@ -201,13 +226,14 @@ window.addEventListener("keydown", (e) => {
 });
 
 export const toggleTheme = () => {
-  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
-  document.documentElement.setAttribute("data-theme", current);
-  localStorage.setItem("typo-theme", current);
-  return current;
-}
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "light" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem("typo-theme", next);
+  return next;
+};
 
-const savedTheme = localStorage.getItem("typo-theme") || "light";
+const savedTheme = localStorage.getItem("typo-theme") || "dark";
 document.documentElement.setAttribute("data-theme", savedTheme);
 
 let menu = "idle";
