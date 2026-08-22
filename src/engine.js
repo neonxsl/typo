@@ -22,7 +22,9 @@ export const harvest = (quarry, qty = 50) => {
 export const crunch = (hits, slips, totalKeys, elapsedSec) => {
   const mins = Math.max(elapsedSec / 60, 0.001);
   const grossWpm = Math.round((totalKeys / 5) / mins);
-  const netWpm = Math.max(0, Math.round(((hits - slips) / 5) / mins));
+
+  const netWpm = Math.max(0, Math.round((hits / 5) / mins));
+
   const acc = totalKeys > 0 ? Math.max(0, Math.round((hits / totalKeys) * 100)) : 100;
   return {
     wpm: netWpm,
@@ -31,6 +33,8 @@ export const crunch = (hits, slips, totalKeys, elapsedSec) => {
     ratio: `${hits}/${totalKeys}`
   };
 };
+
+
 export class TapeDeck {
   constructor(words = [], mode = { kind: "time", target: 15 }) {
     this.mode = mode;

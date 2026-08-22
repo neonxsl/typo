@@ -110,13 +110,17 @@ const bumpWord = () => {
 
   if (!ticker) pulse();
 
+  tape.tap();
+
   const target = tape.words[tape.wi] || "";
 
   if (typed.length < target.length) {
     tape.slips += target.length - typed.length;
     for (let i = tape.ci; i < target.length; i++) {
       view.paintChar(tape.wi, i, "wrong");
-    }
+    } 
+    } else if (typed === target) {
+      tape.hit();
   }
 
   tape.wi++;
