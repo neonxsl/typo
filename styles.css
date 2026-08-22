@@ -7,6 +7,16 @@
   --extra: #991b1b;
   --font: "Space Grotesk", monospace, sans-serif;
 }
+
+[data-theme="light"] {
+  --bg: #fff;
+  --fg: #111;
+  --muted: #a3a3a3;
+  --accent: #111;
+  --wrong: #dc2626;
+  --extra: #7f1d1d;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
