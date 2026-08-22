@@ -63,13 +63,15 @@ body {
   color: var(--accent);
   font-weight: 600;
 }
+
 .stream-wrap {
   position: relative;
   font-size: 1.65rem;
   line-height: 1.6;
-  height: 8.4rem;
+  height: 8.8rem;
   overflow: hidden;
 }
+
 .word-stream {
   position: relative;
   display: flex;
@@ -109,7 +111,6 @@ body {
   gap: 1rem;
 }
 
-
 .metric-val {
   font-size: 2.2rem;
   font-weight: 700;
@@ -118,7 +119,6 @@ body {
 .metric-val.new-pb {
   color: #22c55e;
 }
-
 
 .metric-key {
   color: var(--muted);
