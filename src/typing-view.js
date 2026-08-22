@@ -36,7 +36,7 @@ export class StageFramer {
     const isLight = document.documentElement.getAttribute("data-theme") === "light";
     const lineCol = isLight ? "#111" : "#fff";
     const rawCol = isLight ? "#888" : "#333";
-    const gridCol = isLight ? "#eee" : "#444";
+    const gridCol = isLight ? "#eee" : "#161616";
 
     
 
@@ -86,8 +86,13 @@ export class StageFramer {
           },
         },
         scales: {
+          x: {
+            grid: {display: true, color: gridCol,},
+          },
           y: {
             beginAtZero: true,
+            grid: {display: true, color: gridCol,},
+
           }
         }
       }
