@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>typo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header class="top-shelf">
+        <div class="brand">typo</div>
+        <div class="controls-pill">
+          <span id="mode-label" class="mode-badge">15s</span>
+          <span class="sep">&bull;</span>
+          <span class="subtle">no mouse hehehe #tabbed</span>
+        </div>
+      </header>
+      <section class="stage">
+        <div id="clock" class="timer">15</div>
+        <div id="stream-wrap" class="stream-wrap">
+          <div id="word-stream" class="word-stream"></div>
+          <div id="caret" class="caret"></div>
+        </div>
+      </section>
+      <section id="results" class="results hide">
+        <div class="metric">
+          <span id="res-wpm" class="metric-val">0</span>
+          <span class="metric-key">wpm</span>
+        </div>
+        <div class="metric">
+          <span id="res-acc" class="metric-val">100%</span>
+          <span class="metric-key">acc</span>
+        </div>
+        <div class="metric">
+          <span id="res-raw" class="metric-val">0</span>
+          <span class="metric-key">raw</span>
+        </div>
+        <div class="metric">
+          <span id="res-chars" class="metric-val">0/0</span>
+          <span class="metric-key">chars</span>
+        </div>
+        <div class="metric">
+          <span id="res-pb" class="metric-val">0</span>
+          <span class="metric-key">pb</span>
+        </div>
+      </section>
+      <footer class="bottom-shelf">
+        <span>[esc] restart</span>
+        <span>[1] 15s</span>
+        <span>[2] 30s</span>
+        <span>[3] 60s</span>
+        <span>[4] 25 words</span>
+      </footer>
+    </main>
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
