@@ -201,7 +201,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 export const toggleTheme = () => {
-  const current = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+  const current = document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", current);
   localStorage.setItem("typo-theme", current);
   return current;
