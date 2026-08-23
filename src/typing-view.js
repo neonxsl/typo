@@ -115,7 +115,7 @@ export class StageFramer {
 
     });
   }
-
+  
 
   splatWords(words) {
     this.streamEl.innerHTML = "";

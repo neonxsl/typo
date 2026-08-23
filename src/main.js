@@ -100,6 +100,9 @@ const reboot = async (selectedGear = gear, changeLang = false) => {
   gear = selectedGear;
   localStorage.setItem("typo-mode", gear.label);
 
+  const isCode = currentLang.startsWith("code");
+  document.body.classList.toggle("code-mode", isCode);
+
   menu = "idle";
   renderFooter();
 
