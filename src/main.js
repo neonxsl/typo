@@ -132,7 +132,7 @@ const halt = () => {
   recordSnapshot();
 
   const stats = tape.spill();
-  const pbinfo = updatePB(gear.label, stats.wpm);
+  const pbinfo = updatePB(gear.label, stats.wpm, currentLang);
   view.showTrophy(stats, pbinfo, timeline);
 
   if (pbinfo.isNew && stats.wpm > 0) {
@@ -222,16 +222,16 @@ const bumpWord = () => {
   view.snapCaret(tape.wi, 0);
 };
 
-export const getPB = (modeLabel) => {
-  return Number(localStorage.getItem(`typo-pb-${modeLabel}`) || 0);
+export const getPB = (modeLabel, lang, currentLang) => {
+  return Number(localStorage.getItem(`typo-pb-${lang}-${modeLabel}`) || 0);
 
 };
 
-export const updatePB = (modeLabel, wpm) => {
-  const currentPB = getPB(modeLabel);
+export const updatePB = (modeLabel, wpm, lang, currentLang) => {
+  const currentPB = getPB(modeLabel, lang);
   const isNew = wpm > currentPB;
   if (isNew) {
-    localStorage.setItem(`typo-pb-${modeLabel}`, wpm);
+    localStorage.setItem(`typo-pb-${lang}-${modeLabel}`, wpm);
   }
   return {pb: Math.max(currentPB, wpm), isNew};
 
