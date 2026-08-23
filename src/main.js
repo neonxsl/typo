@@ -23,7 +23,9 @@ const languages = [
   { id: "german", label: "german" },
   { id: "italian", label: "italian" },
 ]
+
 let currentLang = localStorage.getItem("typo-lang") || "english";
+
 
 let langCursor = languages.findIndex((l) => l.id === currentLang);
 if (langCursor === -1) langCursor = 0;
@@ -359,12 +361,17 @@ let menu = "idle";
 const footerEl = document.querySelector(".bottom-shelf");
 
 const renderFooter = () => {
+
+  const langObj = languages.find((l) => l.id === currentLang);
+  const langLabel = langObj ? langObj.label : currentLang;
+
+
   if (menu === "idle") {
     footerEl.innerHTML = `
       <span>[1] time</span>
       <span>[2] words</span>
       <span>[3] settings</span>
-      <span>[4] lang: ${currentLang}</span>
+      <span>[4] lang: ${langLabel}</span>
       <span>[esc] restart</span>`;
   } else if (menu === "time") {
     footerEl.innerHTML = `<span>[1] 15s</span><span>[2] 30s</span><span>[3] 60s</span><span>[esc] back</span>`;
