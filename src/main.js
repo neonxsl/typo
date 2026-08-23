@@ -270,14 +270,11 @@ window.addEventListener("keydown", (e) => {
 
   if (e.key === "Tab") { e.preventDefault(); return; }
 
-
-  if (e.key === "Escape") {
-    if (menu !== "idle") { menu = "idle"; renderFooter(); return; }
-    return reboot();
-  }
-
   if (menu === "language") {
-    if (e.key === "Escape") { closeLangModal(); return; }
+    if (e.key === "Escape") {
+       closeLangModal(); 
+       return; 
+      }
     if (e.key === "ArrowUp") {
       e.preventDefault();
       langCursor = (langCursor - 1 + languages.length) % languages.length;
@@ -333,6 +330,11 @@ window.addEventListener("keydown", (e) => {
         renderFooter();
         return;
       }
+      if (e.key === "2") {
+        toggleHighlight();
+        renderFooter();
+        return;
+      }
     }
 
   }
@@ -353,6 +355,17 @@ export const toggleTheme = () => {
   localStorage.setItem("typo-theme", next);
   return next;
 };
+
+let highlightWord = localStorage.getItem("typo-highlight-word") === "true";
+document.body.classList.toggle("highlight-active", highlightWord);
+
+export const toggleHighlight = () => {
+  highlightWord = !highlightWord;
+  localStorage.setItem("typo-highlight-word", highlightWord);
+  document.body.classList.toggle("highlight-active", highlightWord);
+  return highlightWord;
+}
+
 
 const savedTheme = localStorage.getItem("typo-theme") || "dark";
 document.documentElement.setAttribute("data-theme", savedTheme);
@@ -379,7 +392,7 @@ const renderFooter = () => {
     footerEl.innerHTML = `<span>[1] 10w</span><span>[2] 25w</span><span>[3] 50w</span><span>[esc] back</span>`;
   } else if (menu === "settings") {
     const current = document.documentElement.getAttribute("data-theme") || "dark";
-    footerEl.innerHTML = `<span>[1] theme: ${current}</span><span>[esc] back</span>`;
+    footerEl.innerHTML = `<span>[1] theme: ${current}</span><span>[2] highlight: ${highlightWord ? "on" : "off"}</span><span>[esc] back</span>`;
   }
 
 };

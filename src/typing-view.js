@@ -115,9 +115,10 @@ export class StageFramer {
 
     });
   }
-  
+
 
   splatWords(words) {
+    this.lastWi = null;
     this.streamEl.innerHTML = "";
     this.feedWords(words);
     this.streamEl.style.transform = "translateY(0px)";
@@ -127,6 +128,13 @@ export class StageFramer {
 
     const words = this.streamEl.children;
     if (!words.length || wi >= words.length) return;
+
+    if (this.lastWi !== wi) {
+      if (words[this.lastWi]) words[this.lastWi].classList.remove("current");
+      if (words[wi]) words[wi].classList.add("current");
+      this.lastWi = wi;
+    }
+
     const currentWord = words[wi];
 
     const letters = currentWord.children;
