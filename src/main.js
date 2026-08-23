@@ -18,6 +18,7 @@ const languages = [
   { id: "english", label: "english" },
   { id: "code_javascript", label: "javascript" },
   { id: "code_python", label: "python" },
+  { id: "code_go", label: "go" },
   { id: "spanish", label: "spanish" },
   { id: "french", label: "french" },
   { id: "german", label: "german" },
