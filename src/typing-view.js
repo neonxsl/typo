@@ -77,6 +77,7 @@ export class StageFramer {
       },
       options: {
         responsive: true,
+        animation: false,
         maintainAspectRatio: false,
         plugins: {
           legend: {display: false},

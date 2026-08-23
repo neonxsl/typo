@@ -1,12 +1,15 @@
-export const sipWords = async () => {
+export const sipWords = async (lang = "english") => {
   try {
-    const res = await fetch("languages/english.json");
+    const url = `https://raw.githubusercontent.com/monkeytypegame/monkeytype/refs/heads/master/frontend/static/languages/${lang}.json`;
+    const res = await fetch(url);
     const data = await res.json();
     return Array.isArray(data.words) ? data.words : [];
   } catch {
     return ["type", "test", "speed", "flow", "word", "code", "pure"];
   }
 };
+
+
 export const harvest = (quarry, qty = 50) => {
   const bag = [];
   const len = quarry.length;

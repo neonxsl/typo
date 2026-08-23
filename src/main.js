@@ -14,6 +14,52 @@ const wordModes = [
   { label: "50w", kind: "words", target: 50 }
 ]
 
+const languages = [
+  { id: "english", label: "english" },
+  { id: "code_javascript", label: "javascript" },
+  { id: "code_python", label: "python" },
+  { id: "spanish", label: "spanish" },
+  { id: "french", label: "french" },
+  { id: "german", label: "german" },
+  { id: "italian", label: "italian" },
+]
+let currentLang = localStorage.getItem("typo-lang") || "english";
+
+let langCursor = languages.findIndex((l) => l.id === currentLang);
+if (langCursor === -1) langCursor = 0;
+
+const modalEl = document.getElementById("lang-modal");
+const listEl = document.getElementById("lang-list");
+
+
+const renderLangList = () => {
+  listEl.innerHTML = "";
+  languages.forEach((lang, i) => {
+    const item = document.createElement("div");
+    item.className = `modal-item ${i === langCursor ? "active" : ""}`;
+    item.textContent = lang.label;
+    listEl.appendChild(item);
+  });
+
+
+const activeEl = listEl.children[langCursor];
+if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
+};
+
+
+
+const openLangModal = () => {
+  menu = "language";
+  renderLangList();
+  modalEl.classList.remove("hide");
+};
+
+const closeLangModal = () => {
+  menu = "idle";
+  modalEl.classList.add("hide");
+  renderFooter();
+};
+
 const allMods = [...timeModes, ...wordModes];
 
 const savedModeLabel = localStorage.getItem("typo-mode") || "15s";
@@ -48,7 +94,7 @@ const recordSnapshot = () => {
   });
 }
 
-const reboot = async (selectedGear = gear) => {
+const reboot = async (selectedGear = gear, changeLang = false) => {
   timeline = [];
   lastRecordedErrors = 0;
   gear = selectedGear;
@@ -59,7 +105,11 @@ const reboot = async (selectedGear = gear) => {
 
   if (ticker) clearInterval(ticker);
   ticker = null;
-  if (!pool.length) pool = await sipWords();
+
+  if (!pool.length || changeLang) {
+    pool = await sipWords(currentLang);
+  }
+
   const count = gear.kind === "words" ? gear.target : 60;
   tape = new TapeDeck(harvest(pool, count), gear);
   view.scrubStage();
@@ -221,11 +271,41 @@ window.addEventListener("keydown", (e) => {
     return reboot();
   }
 
+  if (menu === "language") {
+    if (e.key === "Escape") { closeLangModal(); return; }
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      langCursor = (langCursor - 1 + languages.length) % languages.length;
+      renderLangList();
+      return;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      langCursor = (langCursor + 1) % languages.length;
+      renderLangList();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      currentLang = languages[langCursor].id;
+      localStorage.setItem("typo-lang", currentLang);
+      closeLangModal();
+      return reboot(gear, true);
+    }
+    return;
+  }
+
+  if (e.key === "Escape") {
+    if (menu !== "idle") { menu = "idle"; renderFooter(); return; }
+    return reboot();
+  } 
+
   if (!tape.beganAt) {
     if (menu === "idle") {
       if (e.key === "1") { menu = "time"; renderFooter(); return; }
       if (e.key === "2") { menu = "words"; renderFooter(); return; }
       if (e.key === "3") { menu = "settings"; renderFooter(); return; }
+      if (e.key === "4") { openLangModal(); return; }
     
     }
     else if (menu === "time") {
@@ -276,27 +356,23 @@ let menu = "idle";
 const footerEl = document.querySelector(".bottom-shelf");
 
 const renderFooter = () => {
-if (menu === "idle") {
-  footerEl.innerHTML = `
-  <span>[1] time</span>
-  <span>[2] words</span>
-  <span>[3] settings</span>
-  <span>[esc] restart</span>`;
+  if (menu === "idle") {
+    footerEl.innerHTML = `
+      <span>[1] time</span>
+      <span>[2] words</span>
+      <span>[3] settings</span>
+      <span>[4] lang: ${currentLang}</span>
+      <span>[esc] restart</span>`;
   } else if (menu === "time") {
-    footerEl.innerHTML = `<span>[1] 15s</span>
-    <span>[2] 30s</span>
-    <span>[3] 60s</span>
-    <span>[esc] back</span>`
+    footerEl.innerHTML = `<span>[1] 15s</span><span>[2] 30s</span><span>[3] 60s</span><span>[esc] back</span>`;
   } else if (menu === "words") {
-    footerEl.innerHTML = `<span>[1] 10w</span>
-    <span>[2] 25w</span>
-    <span>[3] 50w</span>
-    <span>[esc] back</span>`
+    footerEl.innerHTML = `<span>[1] 10w</span><span>[2] 25w</span><span>[3] 50w</span><span>[esc] back</span>`;
   } else if (menu === "settings") {
     const current = document.documentElement.getAttribute("data-theme") || "dark";
     footerEl.innerHTML = `<span>[1] theme: ${current}</span><span>[esc] back</span>`;
   }
-}
+
+};
 
 reboot();
 renderFooter();
