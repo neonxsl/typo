@@ -9,13 +9,33 @@ export const sipWords = async (lang = "english") => {
   }
 };
 
+const PUNCTUATION_MARKS = [".", ",", "!", "?", ";", ":"];
 
-export const harvest = (quarry, qty = 50) => {
+export const harvest = (quarry, qty = 50, options = { punctuation: false }) => {
   const bag = [];
   const len = quarry.length;
   if (!len) return bag;
+
   for (let i = 0; i < qty; i++) {
-    bag.push(quarry[Math.floor(Math.random() * len)]);
+    if (options.numbers && Math.random() < 0.1) {
+      const num = Math.floor(Math.random() * (Math.random() < 0.5 ? 100 : 2026)).toString();
+      bag.push(num);
+      continue;
+    }
+
+    let word = quarry[Math.floor(Math.random() * len)];
+
+    if (options.punctuation) {
+      if (Math.random() < 0.167) { 
+        word = word.charAt(0).toUpperCase() + word.slice(1);
+      }
+        if (Math.random() < 0.167) { 
+          const mark = PUNCTUATION_MARKS[Math.floor(Math.random() * PUNCTUATION_MARKS.length)];
+          word += mark;
+        }
+    }
+
+    bag.push(word);
   }
   return bag;
 };

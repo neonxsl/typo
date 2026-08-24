@@ -25,6 +25,31 @@ const languages = [
   { id: "italian", label: "italian" },
 ]
 
+
+let hasPunctuation = localStorage.getItem("typo-punc") === "true";
+let hasNumbers = localStorage.getItem("typo-num") === "true";
+
+export const togglePunctuation = () => {
+  hasPunctuation = !hasPunctuation;
+  localStorage.setItem("typo-punc", hasPunctuation);
+
+  const count = gear.kind === "words" ? gear.target : 60;
+  tape = new TapeDeck(harvest(pool, count, { punctuation: hasPunctuation, numbers: hasNumbers }), gear);
+  view.splatWords(tape.words);
+  requestAnimationFrame(() => view.snapCaret(0, 0));
+}
+
+export const toggleNumbers = () => {
+  hasNumbers = !hasNumbers;
+  localStorage.setItem("typo-num", hasNumbers);
+
+  const count = gear.kind === "words" ? gear.target : 60;
+  tape = new TapeDeck(harvest(pool, count, { punctuation: hasPunctuation, numbers: hasNumbers }), gear);
+  view.splatWords(tape.words);
+  requestAnimationFrame(() => view.snapCaret(0, 0));
+
+}
+
 let currentLang = localStorage.getItem("typo-lang") || "english";
 
 
@@ -103,6 +128,8 @@ const reboot = async (selectedGear = gear, changeLang = false) => {
   gear = selectedGear;
   localStorage.setItem("typo-mode", gear.label);
 
+  const count = gear.kind === "words" ? gear.target : 60;
+
   const isCode = currentLang.startsWith("code");
   document.body.classList.toggle("code-mode", isCode);
 
@@ -116,8 +143,7 @@ const reboot = async (selectedGear = gear, changeLang = false) => {
     pool = await sipWords(currentLang);
   }
 
-  const count = gear.kind === "words" ? gear.target : 60;
-  tape = new TapeDeck(harvest(pool, count), gear);
+  tape = new TapeDeck(harvest(pool, count, { punctuation: hasPunctuation, numbers: hasNumbers }), gear);
   view.scrubStage();
   view.setModeTag(gear.label);
   view.tickClock(gear.kind === "time" ? gear.target : `${tape.words.length}w`);
@@ -215,7 +241,7 @@ const bumpWord = () => {
   tape.ci = 0;
 
   if (gear.kind === "time" && tape.wi > tape.words.length - 20) {
-    const fresh = harvest(pool, 25);
+    const fresh = harvest(pool, 25, { punctuation: hasPunctuation, numbers: hasNumbers });
     tape.words.push(...fresh);
     view.feedWords(fresh);
   }
@@ -225,12 +251,12 @@ const bumpWord = () => {
   view.snapCaret(tape.wi, 0);
 };
 
-export const getPB = (modeLabel, lang, currentLang) => {
+export const getPB = (modeLabel, lang = currentLang) => {
   return Number(localStorage.getItem(`typo-pb-${lang}-${modeLabel}`) || 0);
 
 };
 
-export const updatePB = (modeLabel, wpm, lang, currentLang) => {
+export const updatePB = (modeLabel, wpm, lang = currentLang) => {
   const currentPB = getPB(modeLabel, lang);
   const isNew = wpm > currentPB;
   if (isNew) {
@@ -336,6 +362,16 @@ window.addEventListener("keydown", (e) => {
         renderFooter();
         return;
       }
+      if (e.key === "3") {
+        togglePunctuation();
+        renderFooter();
+        return;
+      }
+      if (e.key === "4") {
+        toggleNumbers();
+        renderFooter();
+        return;
+      }
     }
 
   }
@@ -391,10 +427,15 @@ const renderFooter = () => {
     footerEl.innerHTML = `<span>[1] 15s</span><span>[2] 30s</span><span>[3] 60s</span><span>[esc] back</span>`;
   } else if (menu === "words") {
     footerEl.innerHTML = `<span>[1] 10w</span><span>[2] 25w</span><span>[3] 50w</span><span>[esc] back</span>`;
-  } else if (menu === "settings") {
+  }   else if (menu === "settings") {
     const current = document.documentElement.getAttribute("data-theme") || "dark";
-    footerEl.innerHTML = `<span>[1] theme: ${current}</span><span>[2] highlight: ${highlightWord ? "on" : "off"}</span><span>[esc] back</span>`;
-  }
+    footerEl.innerHTML = `
+    <span>[1] theme: ${current}</span>
+    <span>[2] highlight: ${highlightWord ? "on" : "off"}</span>
+    <span>[3] punc: ${hasPunctuation ? "on" : "off"}</span>
+    <span>[4] num: ${hasNumbers ? "on" : "off"}</span>
+    <span>[esc] back</span>`;
+}
 
 };
 
