@@ -13,7 +13,8 @@ export class StageFramer {
     this.resPb = document.getElementById("res-pb");
     this.chartCanvas = document.getElementById("speed-chart");
     this.chartInstance = null;
-
+    this.streakEl = document.getElementById("streak-badge");
+    this.streakAlert = document.getElementById("streak-alert");
   }
 
   renderChart(timeline) {
@@ -116,6 +117,26 @@ export class StageFramer {
     });
   }
 
+  renderStreak(streakData) {
+    if (!this.streakEl) return;
+    const progress = Math.min(streakData.dailyTests, 5);
+    this.streakEl.textContent = `🔥 ${streakData.streak} (${progress}/5)`;
+
+  }
+
+  flashStreakAlert(streak) {
+    if (this.streakEl) {
+      this.streakEl.classList.remove("funkyeh");
+      void this.streakEl.offsetWidth;
+      this.streakEl.classList.add("funkyeh");
+    }
+
+    if (this.streakAlert) {
+      this.streakAlert.textContent = `🔥 streak extended to ${streak}`;
+      this.streakAlert.classList.remove("hide");
+
+    }
+  }
 
   splatWords(words) {
     this.lastWi = null;
@@ -214,7 +235,7 @@ export class StageFramer {
     this.clockEl.classList.remove("hide");
     this.streamWrapEl.classList.remove("hide");
     this.streamEl.style.transform = "translateY(0px)";
-
+    this.streakAlert.classList.add("hide");
 
   }
   

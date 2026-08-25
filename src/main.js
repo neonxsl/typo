@@ -75,6 +75,62 @@ if (activeEl) activeEl.scrollIntoView({ block: "nearest" });
 };
 
 
+const getDateStr = (date = new Date()) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+const getYesterdayStr = () => {
+  const prev = new Date();
+  prev.setDate(prev.getDate() - 1);
+  return getDateStr(prev);
+}
+
+export const getStreakData = () => {
+  const today = getDateStr();
+  const yesterday = getYesterdayStr();
+
+  let streak = Number(localStorage.getItem("typo-streak-count") || 0);
+  const lastStreakDate = localStorage.getItem("typo-streak-last-date");
+
+  if (lastStreakDate && lastStreakDate !== today && lastStreakDate !== yesterday) {
+    streak = 0;
+    localStorage.setItem("typo-streak-count", streak);
+  }
+
+  const savedDate = localStorage.getItem("typo-daily-date");
+  const dailyTests = (savedDate === today) ? Number(localStorage.getItem("typo-daily-count") || 0) : 0;
+
+  return { streak, dailyTests, isCompletedToday: lastStreakDate === today };
+};
+
+export const recordTestForStreak = () => {
+  const today = getDateStr();
+  const yesterday = getYesterdayStr();
+  let {streak, dailyTests, isCompletedToday} = getStreakData();
+
+  dailyTests++;
+  localStorage.setItem("typo-daily-count", dailyTests);
+  localStorage.setItem("typo-daily-date", today);
+
+  let unlockedNewStreak = false;
+
+  if (dailyTests >= 5 && !isCompletedToday) {
+    
+      const lastStreakDate = localStorage.getItem("typo-streak-last-date"); 
+      streak = (lastStreakDate === yesterday) ? streak + 1 : 1;
+      localStorage.setItem("typo-streak-count", streak);
+      localStorage.setItem("typo-streak-last-date", today);
+      isCompletedToday = true;
+      unlockedNewStreak = true;
+
+      //spiderman movie is kinda mid ngl
+    }
+
+  return { streak, dailyTests, isCompletedToday, unlockedNewStreak };
+}
 
 const openLangModal = () => {
   menu = "language";
@@ -150,6 +206,7 @@ const reboot = async (selectedGear = gear, changeLang = false) => {
   view.splatWords(tape.words);
 
   requestAnimationFrame(() => view.snapCaret(0, 0));
+  view.renderStreak(getStreakData());
 };
 
 const halt = () => {
@@ -164,7 +221,18 @@ const halt = () => {
   const pbinfo = updatePB(gear.label, stats.wpm, currentLang);
   view.showTrophy(stats, pbinfo, timeline);
 
-  if (pbinfo.isNew && stats.wpm > 0) {
+  let unlockedStreak = false;
+  if (stats.wpm > 0) {
+    const streakInfo = recordTestForStreak();
+    view.renderStreak(streakInfo);
+    unlockedStreak = streakInfo.unlockedNewStreak;
+
+    if (unlockedStreak) {
+      view.flashStreakAlert(streakInfo.streak);
+    }
+  }
+
+  if (pbinfo.isNew || unlockedStreak && stats.wpm > 0) {
     confetti({
       particleCount: 80,
       spread: 70,

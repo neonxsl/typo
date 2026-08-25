@@ -7,7 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet"/>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -16,6 +15,8 @@
       <header class="top-shelf">
         <div class="brand">typo</div>
         <div class="controls-pill">
+          <span id="streak-badge" class="streak-badge">🔥 0 (0/5)</span>
+          <span class="sep">&bull;</span>
           <span id="mode-label" class="mode-badge">15s</span>
           <span class="sep">&bull;</span>
           <span class="subtle">no mouse hehehe #tabbed</span>
@@ -29,6 +30,7 @@
         </div>
       </section>
       <section id="results" class="results hide">
+        <div id="streak-alert" class="streak-alert hide">🔥 streak extended to _</div>
         <div class="metric">
           <span id="res-wpm" class="metric-val">0</span>
           <span class="metric-key">wpm</span>
