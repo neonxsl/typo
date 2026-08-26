@@ -159,7 +159,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: .9rem;
+  font-size: 1rem;
   color: var(--muted);
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
@@ -225,4 +225,15 @@ body.code-mode .stream-wrap {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.minimal-input {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid var(--muted);
+  font-size: 1.2rem;
+  font-family: var(--font);
+  outline: none;
+  width: 100%;
+  color: var(--fg);
 }

@@ -12,9 +12,20 @@
   </head>
   <body>
     <main id="app">
+      <div id="username-modal" class="modal hide">
+        <div class="modal-card">
+          <div class="modal-header">
+            <span>welcome to typo! choose your username</span>
+            <span class="subtle">[enter] to confirm</span>
+          </div>
+          <input type="text" id="username-input" class="minimal-input" placeholder="type username..." maxlength="15" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
       <header class="top-shelf">
         <div class="brand">typo</div>
         <div class="controls-pill">
+          <span id="user-badge" class="subtle">login</span>
+          <span class="sep">&bull;</span>
           <span id="streak-badge" class="streak-badge">🔥 0 (0/5)</span>
           <span class="sep">&bull;</span>
           <span id="mode-label" class="mode-badge">15s</span>

@@ -1,6 +1,7 @@
 import { sipWords, harvest, TapeDeck } from "./engine.js";
 import { StageFramer } from "./typing-view.js";
 import confetti from "https://esm.sh/canvas-confetti@1.9.4";
+import { getCurrentUser, loginWithGithub, saveCustomUsername, logout } from "./auth.js";
 
 const timeModes = [
   { label: "15s", kind: "time", target: 15 },
@@ -143,6 +144,51 @@ const closeLangModal = () => {
   modalEl.classList.add("hide");
   renderFooter();
 };
+
+
+let user = null;
+const userBadgeEl = document.getElementById("user-badge");
+const usernameModalEl = document.getElementById("username-modal");
+const usernameInputEl = document.getElementById("username-input");
+
+const initAuth = async () => {
+  
+  user = await getCurrentUser();
+  console.log("Appwrite Auth Status:", user);
+
+  if (user) {
+    if (!user.customUsername) {
+      openUsernameModal();
+    } else {
+      userBadgeEl.textContent = user.customUsername;
+    }
+  } else {
+    userBadgeEl.textContent = "login";
+  }
+
+  renderFooter();
+}
+
+const openUsernameModal = () => {
+  menu = "username";
+  usernameModalEl.classList.remove("hide");
+  setTimeout(() => usernameInputEl.focus(), 50);
+};
+
+const submitUsername = async () => {
+  const name = usernameInputEl.value.trim().toLowerCase();
+  if (name.length < 2) return;
+  const savedName = await saveCustomUsername(name);
+  user.customUsername = savedName;
+  userBadgeEl.textContent = savedName;
+
+  usernameModalEl.classList.add("hide");
+  usernameInputEl.blur();
+  menu = "idle";
+  renderFooter();
+}
+
+initAuth();
 
 const allMods = [...timeModes, ...wordModes];
 
@@ -361,9 +407,19 @@ const peel = () => {
   view.snapCaret(tape.wi, tape.ci);
 };
 
-window.addEventListener("keydown", (e) => {
+window.addEventListener("keydown", async (e) => {
 
   if (e.key === "Tab") { e.preventDefault(); return; }
+
+
+  if (menu === "username") {
+    usernameInputEl.focus();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      await submitUsername();
+    }
+    return;
+  }
 
   if (menu === "language") {
     if (e.key === "Escape") {
@@ -440,6 +496,17 @@ window.addEventListener("keydown", (e) => {
         renderFooter();
         return;
       }
+      if (e.key === "5") {
+        if (user) {
+          await logout();
+          user = null;
+          userBadgeEl.textContent = "login";
+          renderFooter();
+        } else {
+          loginWithGithub();
+        }
+        return;
+      }
     }
 
   }
@@ -497,11 +564,13 @@ const renderFooter = () => {
     footerEl.innerHTML = `<span>[1] 10w</span><span>[2] 25w</span><span>[3] 50w</span><span>[esc] back</span>`;
   }   else if (menu === "settings") {
     const current = document.documentElement.getAttribute("data-theme") || "dark";
+    const authLabel = user ? "logout" : "login";
     footerEl.innerHTML = `
     <span>[1] theme: ${current}</span>
     <span>[2] highlight: ${highlightWord ? "on" : "off"}</span>
     <span>[3] punc: ${hasPunctuation ? "on" : "off"}</span>
     <span>[4] num: ${hasNumbers ? "on" : "off"}</span>
+    <span>[5] ${authLabel}</span> 
     <span>[esc] back</span>`;
 }
 
