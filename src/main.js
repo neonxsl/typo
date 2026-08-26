@@ -20,6 +20,7 @@ const languages = [
   { id: "code_javascript", label: "javascript" },
   { id: "code_python", label: "python" },
   { id: "code_go", label: "go" },
+  { id: "tanglish", label: "tamil" },
   { id: "spanish", label: "spanish" },
   { id: "french", label: "french" },
   { id: "german", label: "german" },
