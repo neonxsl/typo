@@ -1,7 +1,7 @@
 import { sipWords, harvest, TapeDeck } from "./engine.js";
 import { StageFramer } from "./typing-view.js";
 import confetti from "https://esm.sh/canvas-confetti@1.9.4";
-import { getCurrentUser, loginWithGithub, saveCustomUsername, logout } from "./auth.js";
+import { getCurrentUser, loginWithGithub, saveCustomUsername, logout, syncCloudData, saveCloudKey } from "./auth.js";
 
 const timeModes = [
   { label: "15s", kind: "time", target: 15 },
@@ -128,6 +128,11 @@ export const recordTestForStreak = () => {
       isCompletedToday = true;
       unlockedNewStreak = true;
 
+      if (user) {
+        saveCloudKey("typo-streak-count", streak);
+        saveCloudKey("typo-streak-last-date", today);
+      }
+
       //spiderman movie is kinda mid ngl
     }
 
@@ -153,11 +158,20 @@ const usernameModalEl = document.getElementById("username-modal");
 const usernameInputEl = document.getElementById("username-input");
 
 const initAuth = async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const userId = urlParams.get("userId");
+  const secret = urlParams.get("secret");
+
+  if (userId && secret) {
+    await exchangeOAuthToken(userId, secret);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
   
   user = await getCurrentUser();
   console.log("Appwrite Auth Status:", user);
 
   if (user) {
+    await syncCloudData();
     if (!user.customUsername) {
       openUsernameModal();
     } else {
@@ -167,6 +181,7 @@ const initAuth = async () => {
     userBadgeEl.textContent = "login";
   }
 
+  view.renderStreak(getStreakData());
   renderFooter();
 }
 
@@ -375,7 +390,11 @@ export const updatePB = (modeLabel, wpm, lang = currentLang) => {
   const currentPB = getPB(modeLabel, lang);
   const isNew = wpm > currentPB;
   if (isNew) {
+    const key = `typo-pb-${lang}-${modeLabel}`;
+
     localStorage.setItem(`typo-pb-${lang}-${modeLabel}`, wpm);
+
+    if (user) saveCloudKey(key,wpm);
   }
   return {pb: Math.max(currentPB, wpm), isNew};
 
