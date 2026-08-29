@@ -11,10 +11,26 @@ export class StageFramer {
     this.resRaw = document.getElementById("res-raw");
     this.resChars = document.getElementById("res-chars");
     this.resPb = document.getElementById("res-pb");
+    this.resXpEl = document.getElementById("res-xp");
+    this.levelBadgeEl = document.getElementById("level-badge");
+    this.levelAlertEl = document.getElementById("level-alert");
     this.chartCanvas = document.getElementById("speed-chart");
     this.chartInstance = null;
     this.streakEl = document.getElementById("streak-badge");
     this.streakAlert = document.getElementById("streak-alert");
+  }
+
+  renderUserLevel(level, totalXP) {
+    if (this.levelBadgeEl) {
+      this.levelBadgeEl.textContent = `lvl ${level} (${(totalXP || 0).toLocaleString()} xp)`;
+    }
+  }
+
+  flashLevelUpAlert(newLevel) {
+    if (this.levelAlertEl) {
+      this.levelAlertEl.textContent = `🎉 level up! reached level ${newLevel}`;
+      this.levelAlertEl.classList.remove("hide");
+    }
   }
 
   renderChart(timeline) {
@@ -210,7 +226,7 @@ export class StageFramer {
   setModeTag(txt) {
     this.modeEl.textContent = txt;
   }
-  showTrophy(stats, pbInfo, timeline = []) {
+  showTrophy(stats, pbInfo, timeline = [], earnedXP = 0) {
     this.resWpm.textContent = stats.wpm;
     this.resAcc.textContent = stats.acc;
     this.resRaw.textContent = stats.raw;
@@ -222,6 +238,10 @@ export class StageFramer {
       this.resPb.classList.toggle("new-pb", pbInfo.isNew);
     // ayyy you got a new pb
     }
+
+    if (this.resXpEl) {
+      this.resXpEl.textContent = `+${earnedXP.toLocaleString()} xp`;
+  }
 
     this.renderChart(timeline);
 
@@ -235,7 +255,8 @@ export class StageFramer {
     this.clockEl.classList.remove("hide");
     this.streamWrapEl.classList.remove("hide");
     this.streamEl.style.transform = "translateY(0px)";
-    this.streakAlert.classList.add("hide");
+    if (this.streakAlert) this.streakAlert.classList.add("hide");
+    if (this.levelAlertEl) this.levelAlertEl.classList.add("hide");
 
   }
   

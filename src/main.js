@@ -1,7 +1,7 @@
-import { sipWords, harvest, TapeDeck } from "./engine.js";
+import { sipWords, harvest, TapeDeck, calculateTestXP, calculateLevel } from "./engine.js";
 import { StageFramer } from "./typing-view.js";
 import confetti from "https://esm.sh/canvas-confetti@1.9.4";
-import { getCurrentUser, loginWithGithub, saveCustomUsername, logout, syncCloudData, saveCloudKey } from "./auth.js";
+import { getCurrentUser, loginWithGithub, saveCustomUsername, logout, syncCloudData, saveCloudKey, submitToLeaderbaord, getLeaderboard, exchangeOAuthToken, getUserStats } from "./auth.js";
 
 const timeModes = [
   { label: "15s", kind: "time", target: 15 },
@@ -27,6 +27,54 @@ const languages = [
   { id: "italian", label: "italian" },
 ]
 
+const lbModalEl = document.getElementById("leaderboard-modal");
+const lbListEl = document.getElementById("lb-list");
+const lbTabs = document.querySelectorAll(".lb-tab");
+const lbCategories = ["overall", "15s", "30s", "60s", "10w", "25w", "50w"];
+let activeLbCat = "overall";
+
+const renderLeaderboard = async (cat = activeLbCat) => {
+  activeLbCat = cat;
+  lbTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.cat === cat));
+  lbListEl.innerHTML = `<div class="subtle">loading...</div>`;
+
+  const rows = await getLeaderboard(cat);
+
+  if (!rows.length) {
+    lbListEl.innerHTML = `<div class="subtle">no entries yet. be the first!</div>`;
+    return;
+  }
+
+  lbListEl.innerHTML = "";
+  rows.forEach((row, i) => {
+    const isMe = user && row.username === user.customUsername;
+    const item = document.createElement("div");
+    item.className = `lb-row ${isMe ? "active-user" : ""}`;
+
+  const scoreDisplay = cat === "overall" 
+  ? `<span class="subtle">lvl ${row.level || 1}</span> <span class="lb-stat">${(row.totalXP || 0).toLocaleString()} xp</span>` 
+  : `<span class="lb-stat">${row[`wpm_${cat}`] || 0} wpm</span>`;
+
+    item.innerHTML = `
+    <span class="lb-rank">${i + 1}</span>
+    <span class="lb-name">${row.username}</span>
+    ${scoreDisplay}
+    <span class="subtle"> 🔥 ${row.streak || 0}d</span>`;
+    lbListEl.appendChild(item);
+  });
+}
+
+const openLeaderboard = () => {
+  menu = "leaderboard";
+  lbModalEl.classList.remove("hide");
+  renderLeaderboard("overall");
+};
+
+const closeLeaderboard = () => {
+  menu = "idle";
+  lbModalEl.classList.add("hide");
+  renderFooter();
+}
 
 let hasPunctuation = localStorage.getItem("typo-punc") === "true";
 let hasNumbers = localStorage.getItem("typo-num") === "true";
@@ -34,7 +82,7 @@ let hasNumbers = localStorage.getItem("typo-num") === "true";
 export const togglePunctuation = () => {
   hasPunctuation = !hasPunctuation;
   localStorage.setItem("typo-punc", hasPunctuation);
-
+  if (user) saveCloudKey("typo-punc", hasPunctuation);
   const count = gear.kind === "words" ? gear.target : 60;
   tape = new TapeDeck(harvest(pool, count, { punctuation: hasPunctuation, numbers: hasNumbers }), gear);
   view.splatWords(tape.words);
@@ -44,7 +92,7 @@ export const togglePunctuation = () => {
 export const toggleNumbers = () => {
   hasNumbers = !hasNumbers;
   localStorage.setItem("typo-num", hasNumbers);
-
+  if (user) saveCloudKey("typo-num", hasNumbers);
   const count = gear.kind === "words" ? gear.target : 60;
   tape = new TapeDeck(harvest(pool, count, { punctuation: hasPunctuation, numbers: hasNumbers }), gear);
   view.splatWords(tape.words);
@@ -116,6 +164,10 @@ export const recordTestForStreak = () => {
   dailyTests++;
   localStorage.setItem("typo-daily-count", dailyTests);
   localStorage.setItem("typo-daily-date", today);
+  if (user) {
+    saveCloudKey("typo-daily-count", dailyTests);
+    saveCloudKey("typo-daily-date", today);
+  }
 
   let unlockedNewStreak = false;
 
@@ -170,8 +222,16 @@ const initAuth = async () => {
   user = await getCurrentUser();
   console.log("Appwrite Auth Status:", user);
 
+  let totalXP = Number(localStorage.getItem("typo-total-xp") || 0);
+
   if (user) {
     await syncCloudData();
+
+    const cloudDoc = await getUserStats(user.$id);
+    if (cloudDoc && cloudDoc.totalXP) {
+      totalXP = cloudDoc.totalXP;
+      localStorage.setItem("typo-total-xp", totalXP);
+    }
     if (!user.customUsername) {
       openUsernameModal();
     } else {
@@ -180,7 +240,8 @@ const initAuth = async () => {
   } else {
     userBadgeEl.textContent = "login";
   }
-
+  totalXP = Number(localStorage.getItem("typo-total-xp") || 0);
+  view.renderUserLevel(calculateLevel(totalXP), totalXP);
   view.renderStreak(getStreakData());
   renderFooter();
 }
@@ -245,6 +306,7 @@ const reboot = async (selectedGear = gear, changeLang = false) => {
   lastRecordedErrors = 0;
   gear = selectedGear;
   localStorage.setItem("typo-mode", gear.label);
+  if (user) saveCloudKey("typo-mode", gear.label);
 
   const count = gear.kind === "words" ? gear.target : 60;
 
@@ -273,6 +335,7 @@ const reboot = async (selectedGear = gear, changeLang = false) => {
 
 const halt = () => {
 
+
   tape.nuke();
   if (ticker) clearInterval(ticker);
   ticker = null;
@@ -281,9 +344,11 @@ const halt = () => {
 
   const stats = tape.spill();
   const pbinfo = updatePB(gear.label, stats.wpm, currentLang);
-  view.showTrophy(stats, pbinfo, timeline);
 
   let unlockedStreak = false;
+  let isLevelUp = false;
+  let earnedXP = 0;
+
   if (stats.wpm > 0) {
     const streakInfo = recordTestForStreak();
     view.renderStreak(streakInfo);
@@ -292,9 +357,36 @@ const halt = () => {
     if (unlockedStreak) {
       view.flashStreakAlert(streakInfo.streak);
     }
+
+    earnedXP = calculateTestXP(stats, gear, { punctuation: hasPunctuation, numbers: hasNumbers }, currentLang, streakInfo.streak);
+
+    const oldTotalXP = Number(localStorage.getItem("typo-total-xp") || 0);
+    const oldLevel = calculateLevel(oldTotalXP);
+
+    let newTotalXP = oldTotalXP + earnedXP;
+    let newLevel = calculateLevel(newTotalXP);
+
+    localStorage.setItem("typo-total-xp", newTotalXP);
+    view.renderUserLevel(newLevel, newTotalXP);
+
+    if (user && user.customUsername) {
+      submitToLeaderbaord(user, stats, gear, earnedXP, currentLang, streakInfo.streak).then((updated) => {
+        if (updated) {
+          localStorage.setItem("typo-total-xp", updated.totalXP);
+          view.renderUserLevel(calculateLevel(updated.totalXP), updated.totalXP);
+        }
+      });
+    }
+
+    if (newLevel > oldLevel) {
+      isLevelUp = true;
+      view.flashLevelUpAlert(newLevel);
+    }
   }
 
-  if (pbinfo.isNew || unlockedStreak && stats.wpm > 0) {
+  view.showTrophy(stats, pbinfo, timeline, earnedXP);
+
+  if ((pbinfo.isNew || unlockedStreak || isLevelUp) && stats.wpm > 0) {
     confetti({
       particleCount: 80,
       spread: 70,
@@ -431,6 +523,20 @@ window.addEventListener("keydown", async (e) => {
 
   if (e.key === "Tab") { e.preventDefault(); return; }
 
+  if (menu === "leaderboard") {
+    if (e.key === "Escape") { closeLeaderboard(); return; }
+
+    if (e.key === "ArrowUp") { e.preventDefault(); lbListEl.scrollTop -= 50; return; }
+    if (e.key === "ArrowDown") { e.preventDefault(); lbListEl.scrollTop += 50; return; }
+
+    const catIndex = Number(e.key) - 1;
+    if (catIndex >= 0 && catIndex < lbCategories.length) {
+      renderLeaderboard(lbCategories[catIndex]);
+      return;
+    }
+    return;
+  }
+
 
   if (menu === "username") {
     usernameInputEl.focus();
@@ -462,6 +568,7 @@ window.addEventListener("keydown", async (e) => {
       e.preventDefault();
       currentLang = languages[langCursor].id;
       localStorage.setItem("typo-lang", currentLang);
+      if (user) saveCloudKey("typo-lang", currentLang);
       closeLangModal();
       return reboot(gear, true);
     }
@@ -479,7 +586,7 @@ window.addEventListener("keydown", async (e) => {
       if (e.key === "2") { menu = "words"; renderFooter(); return; }
       if (e.key === "3") { menu = "settings"; renderFooter(); return; }
       if (e.key === "4") { openLangModal(); return; }
-    
+      if (e.key === "5") { openLeaderboard(); return; }
     }
     else if (menu === "time") {
       if (["1", "2", "3"].includes(e.key)) {
@@ -545,6 +652,7 @@ export const toggleTheme = () => {
   const next = current === "light" ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", next);
   localStorage.setItem("typo-theme", next);
+  if (user) saveCloudKey("typo-theme", next);
   return next;
 };
 
@@ -555,6 +663,7 @@ export const toggleHighlight = () => {
   highlightWord = !highlightWord;
   localStorage.setItem("typo-highlight-word", highlightWord);
   document.body.classList.toggle("highlight-active", highlightWord);
+  if (user) saveCloudKey("typo-highlight-word", highlightWord);
   return highlightWord;
 }
 
@@ -577,6 +686,7 @@ const renderFooter = () => {
       <span>[2] words</span>
       <span>[3] settings</span>
       <span>[4] lang: ${langLabel}</span>
+      <span>[5] leaderboard</span>
       <span>[esc] restart</span>`;
   } else if (menu === "time") {
     footerEl.innerHTML = `<span>[1] 15s</span><span>[2] 30s</span><span>[3] 60s</span><span>[esc] back</span>`;

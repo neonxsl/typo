@@ -26,6 +26,8 @@
         <div class="controls-pill">
           <span id="user-badge" class="subtle">login</span>
           <span class="sep">&bull;</span>
+          <span id="level-badge" class="subtle">lvl 1</span>
+          <span class="sep">&bull;</span>
           <span id="streak-badge" class="streak-badge">🔥 0 (0/5)</span>
           <span class="sep">&bull;</span>
           <span id="mode-label" class="mode-badge">15s</span>
@@ -42,6 +44,7 @@
       </section>
       <section id="results" class="results hide">
         <div id="streak-alert" class="streak-alert hide">🔥 streak extended to _</div>
+        <div id ="level-alert" class="level-alert hide">🎉 level up! reached level _</div>
         <div class="metric">
           <span id="res-wpm" class="metric-val">0</span>
           <span class="metric-key">wpm</span>
@@ -62,6 +65,7 @@
           <span id="res-pb" class="metric-val">0</span>
           <span class="metric-key">pb</span>
         </div>
+        <div id="res-xp" class="earned-xp subtle">+0 xp</div>
         <div class="chart-box">
           <canvas id="speed-chart"></canvas>
         </div>
@@ -77,6 +81,26 @@
             <span class="subtitle">use up/down arrows &bull; [enter] select &bull; [esc] cancel</span>
           </div>
             <div id="lang-list" class="modal-list">
+          </div>
+        </div>
+      </div>
+      <div id ="leaderboard-modal" class="modal hide">
+        <div class="modal-card lb-card">
+          <div class="modal-header">
+            <span>leaderboard</span>
+            <span class="subtle">[1-7] category &bull; [up/down] scroll &bull; [esc] to close</span>
+          </div>
+          <div class="lb-tabs">
+             <span class="lb-tab active" data-cat="overall">[1] overall</span>
+             <span class="lb-tab" data-cat="15s">[2] 15s</span>
+             <span class="lb-tab" data-cat="30s">[3] 30s</span>
+             <span class="lb-tab" data-cat="60s">[4] 60s</span>
+             <span class="lb-tab" data-cat="10w">[5] 10w</span>
+             <span class="lb-tab" data-cat="25w">[6] 25w</span>
+            <span class="lb-tab" data-cat="50w">[7] 50w</span>
+          </div>
+          <div id="lb-list" class="lb-list modal-list">
+            <div class="lb-loading subtle">loading...</div>
           </div>
         </div>
       </div>

@@ -199,7 +199,7 @@ body.code-mode .stream-wrap {
   transform-origin: center;
 }
 
-.streak-bade.funkyeh {
+.streak-badge.funkyeh {
   animation: funkyEh 0.6s ease-in-out;
 }
 
@@ -236,4 +236,82 @@ body.code-mode .stream-wrap {
   outline: none;
   width: 100%;
   color: var(--fg);
+}
+
+.lb-card {
+  width: min(720px, 92vw);
+  max-height: 500px;
+}
+
+.lb-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 0.8rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--muted);
+}
+
+.lb-tab.active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.lb-list {
+  overflow-y: auto;
+  max-height: 320px;
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr auto auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  border-radius: 4px;
+  color: var(--muted);
+}
+
+.lb-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--fg);
+}
+
+.lb-rank {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.lb-name {
+  color: var(--fg);
+}
+
+.lb-stat {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.level-alert {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #a855f7;
+  border: 1px solid #a855f7;
+  background: rgba(168, 85, 247, 0.08);
+  padding: 0.6rem 1rem;
+  border-radius: 4px;
+  animation: slideDown 0.4s ease-in-out;
+}
+
+.earned-xp {
+  grid-column: 1 / -1;
+  text-align: center;
+  font-size: 1rem;
+  color: var(--muted);
+  margin-top: -0.5rem;
 }

@@ -83,3 +83,27 @@ export class TapeDeck {
   hit() { this.hits++; }
   nuke() { this.sealed = true; }
 }
+
+export const calculateTestXP = ( stats, gear, options, lang, streak ) => {
+  if (stats.wpm <= 0) return 0;
+
+  const rawAcc = parseInt(stats.acc) || 100;
+  const base = stats.wpm * (rawAcc / 100);
+
+  const durationMult = {
+    "15s":1, "10w": 1, "30s": 1.5, "25w": 1.5, "60s": 2.4, "50w": 2.4}[gear.label] || 1;
+
+    let multiplier = durationMult;
+
+    if (options.punctuation) multiplier += 0.25;
+    if (options.numbers) multiplier += 0.2;
+    if (lang.startsWith("code")) multiplier += 0.35;
+
+    multiplier += Math.min(streak * 0.03, 0.3);
+
+    return Math.round(base * multiplier);
+};
+
+export const calculateLevel = (totalXP) => {
+  return Math.floor(Math.sqrt(totalXP / 100)) + 1;
+};
