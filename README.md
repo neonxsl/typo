@@ -2,6 +2,8 @@
 
 > a minimalist, keyboard only typing test with a xp and leveling up system, as well as cloud sync and leaderboards. no mouse allowed! #tabbed
 
+live at https://typo.neonxsl.dev
+
 <img width="1018" height="403" alt="Screenshot 2026-08-31 at 10 18 00 pm" src="https://github.com/user-attachments/assets/e14d10e1-f503-4184-b382-e577104f6443" />
 
 
