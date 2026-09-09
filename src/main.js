@@ -580,7 +580,7 @@ window.addEventListener("keydown", async (e) => {
     return reboot();
   } 
 
-  if (!tape.beganAt) {
+  if (!tape.beganAt || tape.sealed) {
     if (menu === "idle") {
       if (e.key === "1") { menu = "time"; renderFooter(); return; }
       if (e.key === "2") { menu = "words"; renderFooter(); return; }
